@@ -13,12 +13,14 @@ public class FollowerResponse {
     }
 
     public FollowerResponse(Follower follower) {
-        new FollowerResponse(follower.getId(), follower.getFollower().getName());
+        this(follower.getId(), follower.getFollower().getName());
     }
 
     public FollowerResponse(Long id, String name){
         this.id = id;
         this.name = name;
     }
+
+
 
 }
