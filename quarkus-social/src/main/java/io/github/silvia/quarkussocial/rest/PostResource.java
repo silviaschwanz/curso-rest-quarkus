@@ -71,13 +71,13 @@ public class PostResource {
         User follower = userRepository.findById(followerId);
 
         if(follower == null){
-            return Response.status(Response.Status.BAD_REQUEST).entity("Inexistent followerId").build();
+            return Response.status(Response.Status.BAD_REQUEST).entity("Nonexistent followerId").build();
         }
 
         boolean follows = followerRepository.follows(follower, user);
 
         if(!follows){
-            return Response.status(Response.Status.FORBIDDEN).build();
+            return Response.status(Response.Status.FORBIDDEN).entity("You can't see these posts").build();
         }
 
         PanacheQuery<Post> query = postRepository.find(

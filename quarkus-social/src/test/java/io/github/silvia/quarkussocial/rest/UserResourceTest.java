@@ -1,28 +1,37 @@
 package io.github.silvia.quarkussocial.rest;
 
+import io.github.silvia.quarkussocial.domain.model.User;
+import io.github.silvia.quarkussocial.domain.repository.UserRepository;
 import io.github.silvia.quarkussocial.rest.dto.CreateUserRequest;
 import io.github.silvia.quarkussocial.rest.dto.ResponseError;
+import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import io.vertx.mutiny.ext.web.handler.ResponseContentTypeHandler;
-import jakarta.ws.rs.core.Response;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.*;
 
-import java.util.List;
-import java.util.Map;
+import java.net.URL;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class UserResourceTest {
+
+    @Inject
+    UserRepository userRepository;
+
+    @TestHTTPResource("/users")
+    URL apiURL;
 
 
     @Test
     @DisplayName("Should create an user successfully")
+    @Order(1)
     public void createUserTest() {
 
         CreateUserRequest user = new CreateUserRequest();
@@ -32,7 +41,7 @@ class UserResourceTest {
         given()
                 .contentType(ContentType.JSON)
                 .body(user)
-                .when().post("/users")
+                .when().post(apiURL)
                 .then()
                 .statusCode(201)
                 .body("name", is("Fulano"))
@@ -41,6 +50,7 @@ class UserResourceTest {
 
     @Test
     @DisplayName("Should return error when json is not valid")
+    @Order(2)
     public void createUserValidationErrorTest(){
         CreateUserRequest user = new CreateUserRequest();
         user.setName(null);
@@ -49,7 +59,7 @@ class UserResourceTest {
         given()
                 .contentType(ContentType.JSON)
                 .body(user)
-                .when().post("/users")
+                .when().post(apiURL)
                 .then()
                 .statusCode(ResponseError.UNPROCESSABLE_ENTITY_STATUS)
                 .body("message", is("Validation Error"))
@@ -57,6 +67,24 @@ class UserResourceTest {
                 .body("errors.message", hasItems("Name is Required", "Age is Required"));
     }
 
+    @Test
+    @DisplayName("Should list all users")
+    @Transactional
+    @Order(3)
+    public void listAllUsersTest(){
+
+/*        var user = new User();
+        user.setAge(30);
+        user.setName("Fulano");
+        userRepository.persist(user);*/
+
+        given()
+                .contentType(ContentType.JSON)
+                .when().get(apiURL)
+                .then()
+                .statusCode(200)
+                .body("size()", Matchers.is(1));
+    }
 
 
 }
